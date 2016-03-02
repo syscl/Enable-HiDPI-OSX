@@ -29,8 +29,8 @@ BLUE="\033[1;34m"
 OFF="\033[m"
 
 #
-# Define variables
-# Gvariables stands for getting datas from OS X
+# Define variables.
+# Gvariables stands for getting datas from OS X.
 #
 gDisplayVendorID_RAW=""
 gDisplayVendorID=""
@@ -48,6 +48,7 @@ gHeight_HiDPI_VAL=""
 gWide_HiDPI_VAL=""
 gRes_HiDPI_VAL=""
 gRes_HiDPI_ENCODE=""
+gDespath=""
 
 #
 # Repository location
@@ -97,19 +98,19 @@ function _getEDID()
 
 function _printHeader()
 {
-echo '<?xml version="1.0" encoding="UTF-8"?>'                                                                                       > "$gConfig"
-echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'                      >> "$gConfig"
-echo '<plist version="1.0">'                                                                                                       >> "$gConfig"
-echo '<dict>'                                                                                                                      >> "$gConfig"
-echo '	<key>DisplayProductID</key>'                                                                                               >> "$gConfig"
-echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
-echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
-echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
-echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
-echo '	<array>'                                                                                                                   >> "$gConfig"
-echo '	</array>'                                                                                                                  >> "$gConfig"
-echo '</dict>'                                                                                                                     >> "$gConfig"
-echo '</plist>'                                                                                                                    >> "$gConfig"
+    echo '<?xml version="1.0" encoding="UTF-8"?>'                                                                                       > "$gConfig"
+    echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'                      >> "$gConfig"
+    echo '<plist version="1.0">'                                                                                                       >> "$gConfig"
+    echo '<dict>'                                                                                                                      >> "$gConfig"
+    echo '	<key>DisplayProductID</key>'                                                                                               >> "$gConfig"
+    echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
+    echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
+    echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
+    echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
+    echo '	<array>'                                                                                                                   >> "$gConfig"
+    echo '	</array>'                                                                                                                  >> "$gConfig"
+    echo '</dict>'                                                                                                                     >> "$gConfig"
+    echo '</plist>'                                                                                                                    >> "$gConfig"
 }
 
 function _create_dir()
@@ -154,8 +155,8 @@ function _calcsRes()
             #
             gHeight_HiDPI_VAL=$(echo $((gHeightVAL*2)))
             gWide_HiDPI_VAL=$(echo $((gWideVAL*2)))
-#           echo $gHeight_HiDPI_VAL
-#           echo $gWide_HiDPI_VAL
+            #echo $gHeight_HiDPI_VAL
+            #echo $gWide_HiDPI_VAL
 
             #
             # Convet Height and Wide(decimal) into hex
@@ -179,7 +180,7 @@ function _calcsRes()
             gRes_HiDPI_ENCODE=$(echo $gRes_HiDPI_VAL | xxd -r -p | base64)
 
             #
-            # Inject HiDPI
+            # Inject HiDPI values.
             #
             /usr/libexec/plistbuddy -c "Add ':scale-resolutions:0' string" $gConfig
             /usr/libexec/plistbuddy -c "Set ':scale-resolutions:0' $gRes_ENCODE" $gConfig
@@ -193,17 +194,29 @@ function _calcsRes()
     done
 }
 
+function _OSCheck()
+{
+    # Extract minor version (eg. 10.9 vs. 10.10 vs. 10.11)
+    MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
+    if [[ $MINOR_VER -ge 11 ]]; 
+        then
+            gDespath=$(echo "/System/Library/Displays/Contents/Resources/Overrides/DisplayVendorID-$gDisplayVendorID_RAW")
+        else
+            gDespath=$(echo "/System/Library/Displays/Overrides/DisplayVendorID-$gDisplayVendorID_RAW")
+    fi
+}
 
 _getEDID
 _buildconfig
 _printHeader
 _calcsRes
+_OSCheck
 
 echo "Backuping origin Display Information..."
-sudo cp -R "/System/Library/Displays/Contents/Resources/Overrides/DisplayVendorID-$gDisplayVendorID_RAW" ${REPO}/backup
+sudo cp -R "$gDespath" ${REPO}/backup
 sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
 sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled
-sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" /System/Library/Displays/Contents/Resources/Overrides/
+sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
 echo "Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
 
 exit 0
