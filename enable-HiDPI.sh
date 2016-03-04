@@ -39,7 +39,7 @@ gDisplayProductID_sfix=""
 gDisplayProductID_fix=""
 gDisplayProductID=""
 gConfig=""
-gRes_RAW=""
+gRes_RAW="F"
 gRes_VAL=""
 gRes_ENCODE=""
 gHeight_HiDPI=""
@@ -132,67 +132,70 @@ function _buildconfig()
 
 function _calcsRes()
 {
-    go=0
+	#
+	# Increment i stands for adding arrays.
+	#
+    i=0
 
-    while [ $go -eq 0 ];
-    do
-        read -p "Enter the Resolution you want to enable HiDPI: " gRes_RAW
+		while [ "$gRes_RAW" != 0 ];
+    	do
+        	read -p "Enter the Resolution you want to enable HiDPI(If you want to stop adding or say you just add enough number of HiDPI resolution you want, enter 0: " gRes_RAW
 
-        if [[ "$gRes_RAW" != *"x"* ]];
-        then
-            echo "Enter valid value, acceptance vals looks like 1920x1080"
-            go=0
-        else
-            #
-            # Raw Datas
-            #
-            gHeightVAL=$(echo $gRes_RAW | cut -f 1 -d "x")
-            gWideVAL=$(echo $gRes_RAW | cut -f 2 -d "x")
+            if [[ $gRes_RAW != 0 ]];
+                then
+            		#
+            		# Raw Datas
+            		#
+            		gHeightVAL=$(echo $gRes_RAW | cut -f 1 -d "x")
+            		gWideVAL=$(echo $gRes_RAW | cut -f 2 -d "x")
 
 
-            #
-            # HiDPI (note that for enable HiDPI, all Height and Val must be twice
-            #
-            gHeight_HiDPI_VAL=$(echo $((gHeightVAL*2)))
-            gWide_HiDPI_VAL=$(echo $((gWideVAL*2)))
-            #echo $gHeight_HiDPI_VAL
-            #echo $gWide_HiDPI_VAL
+            		#
+            		# HiDPI (note that for enable HiDPI, all Height and Val must be twice
+            		#
+            		gHeight_HiDPI_VAL=$(echo $((gHeightVAL*2)))
+            		gWide_HiDPI_VAL=$(echo $((gWideVAL*2)))
+            		#echo $gHeight_HiDPI_VAL
+            		#echo $gWide_HiDPI_VAL
 
-            #
-            # Convet Height and Wide(decimal) into hex
-            #
-            gHeight=$(echo "obase=16;$gHeightVAL" | bc)
-            gWide=$(echo "obase=16;$gWideVAL" | bc)
+            		#
+            		# Convet Height and Wide(decimal) into hex
+            		#
+            		gHeight=$(echo "obase=16;$gHeightVAL" | bc)
+            		gWide=$(echo "obase=16;$gWideVAL" | bc)
 
-            gHeight_HiDPI=$(echo "obase=16;$gHeight_HiDPI_VAL" | bc)
-            gWide_HiDPI=$(echo "obase=16;$gWide_HiDPI_VAL" | bc)
+            		gHeight_HiDPI=$(echo "obase=16;$gHeight_HiDPI_VAL" | bc)
+            		gWide_HiDPI=$(echo "obase=16;$gWide_HiDPI_VAL" | bc)
 
-            #
-            # Generate Resolution Values (Hex)
-            #
-            gRes_VAL=$(echo "00000$gHeight 00000$gWide 00000001 00200000")
-            gRes_HiDPI_VAL=$(echo "00000$gHeight_HiDPI 00000$gWide_HiDPI 00000001 00200000")
+            		#
+            		# Generate Resolution Values (Hex)
+            		#
+            		gRes_VAL=$(echo "00000$gHeight 00000$gWide 00000001 00200000")
+            		gRes_HiDPI_VAL=$(echo "00000$gHeight_HiDPI 00000$gWide_HiDPI 00000001 00200000")
 
-            #
-            # Encode Resolution Values(Hex) into base64
-            #
-            gRes_ENCODE=$(echo $gRes_VAL | xxd -r -p | base64)
-            gRes_HiDPI_ENCODE=$(echo $gRes_HiDPI_VAL | xxd -r -p | base64)
+            		#
+            		# Encode Resolution Values(Hex) into base64
+            		#
+            		gRes_ENCODE=$(echo $gRes_VAL | xxd -r -p | base64)
+            		gRes_HiDPI_ENCODE=$(echo $gRes_HiDPI_VAL | xxd -r -p | base64)
 
-            #
-            # Inject HiDPI values.
-            #
-            /usr/libexec/plistbuddy -c "Add ':scale-resolutions:0' string" $gConfig
-            /usr/libexec/plistbuddy -c "Set ':scale-resolutions:0' $gRes_ENCODE" $gConfig
+            		#
+            		# Inject HiDPI values.
+            		#
+            		/usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
+            		/usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_ENCODE" $gConfig
 
-            /usr/libexec/plistbuddy -c "Add ':scale-resolutions:1' string" $gConfig
-            /usr/libexec/plistbuddy -c "Set ':scale-resolutions:1' $gRes_HiDPI_ENCODE" $gConfig
+            		/usr/libexec/plistbuddy -c "Add ':scale-resolutions:$((i+1))' string" $gConfig
+            		/usr/libexec/plistbuddy -c "Set ':scale-resolutions:$((i+1))' $gRes_HiDPI_ENCODE" $gConfig
 
-            perl -pi -e 's/string/data/g' $gConfig
-            go=1
-        fi
-    done
+            		perl -pi -e 's/string/data/g' $gConfig
+                	gRes_RAW=""
+                	i=$(($i+1))
+        	fi
+
+    	done
 }
+
 
 function _OSCheck()
 {
@@ -206,17 +209,29 @@ function _OSCheck()
     fi
 }
 
+function _patch()
+{
+	#
+	# Count number indicates patch system or not.
+	#
+	if [ $i != 0 ];
+		then
+			echo "Backuping origin Display Information..."
+			sudo cp -R "$gDespath" ${REPO}/backup
+			sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
+			sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled
+			sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
+			echo "Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
+		else
+			echo "Since you stop the operation, don't worry all your files in system hasnt been touched."
+	fi
+}
+
 _getEDID
 _buildconfig
 _printHeader
 _calcsRes
 _OSCheck
-
-echo "Backuping origin Display Information..."
-sudo cp -R "$gDespath" ${REPO}/backup
-sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
-sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled
-sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
-echo "Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
+_patch
 
 exit 0
