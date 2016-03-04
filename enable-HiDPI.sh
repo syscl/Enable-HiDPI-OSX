@@ -200,9 +200,9 @@ function _OSCheck()
     MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
     if [[ $MINOR_VER -ge 11 ]]; 
         then
-            gDespath=$(echo "/System/Library/Displays/Contents/Resources/Overrides/DisplayVendorID-$gDisplayVendorID_RAW")
+            gDespath=$(echo "/System/Library/Displays/Contents/Resources/Overrides/")
         else
-            gDespath=$(echo "/System/Library/Displays/Overrides/DisplayVendorID-$gDisplayVendorID_RAW")
+            gDespath=$(echo "/System/Library/Displays/Overrides/")
     fi
 }
 
