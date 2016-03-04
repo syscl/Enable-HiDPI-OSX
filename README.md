@@ -1,8 +1,6 @@
 Enable HiDPI on OS X
 ============
 
-About Enable-HiDPI(En-HiDPI)
-----------------
 Hola, this is an ongoing project targets at enable the support of HiDPI for display with a high resolution under OS X(10.9, 10.10, 10.11). AFAIK, there is various way to patch/force the HiDPI mode, however, I want to create a more precise and clean way to patch the system. That's why I start to build this project. 
 
 I know there's still long way to go, but this time, I want to share this patch ASAP. All the suggestions are welcome. I just added a new function(or say more precisely, a more completely script) which can add as much as HiDPI resolutions you want at the same time. Wish you will enjoy! lighting/syscl/Yating Zhou :-)
