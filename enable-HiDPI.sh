@@ -1,10 +1,12 @@
 #!/bin/sh
 
-#  Script.sh
+#  enable-HiDPI.sh
 #  
 #
-#  Created by lighting on 16/3/2.
+#  Created by syscl/lighting/Yating Zhou on 16/3/2.
 #
+
+#================================= GLOBAL VARS ==================================
 
 #
 # The script expects '0.5' but non-US localizations use '0,5' so we export
@@ -61,8 +63,42 @@ REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 gConfig=""
 
 #
-# Create functions.
+#--------------------------------------------------------------------------------
 #
+
+function _PRINT_MSG()
+{
+    local message=$1
+
+    if [[ $message =~ 'OK' ]];
+      then
+        local message=$(echo $message | sed -e 's/.*OK://')
+        echo "[  ${GREEN}OK${OFF}  ] ${message}."
+      else
+        if [[ $message =~ 'FAILED' ]];
+          then
+            local message=$(echo $message | sed -e 's/.*://')
+            echo "[${RED}FAILED${OFF}] ${message}."
+          else
+            if [[ $message =~ '--->' ]];
+              then
+                local message=$(echo $message | sed -e 's/.*--->://')
+                echo "[ ${GREEN}--->${OFF} ] ${message}"
+              else
+                if [[ $message =~ 'NOTE' ]];
+                  then
+                    local message=$(echo $message | sed -e 's/.*NOTE://')
+                    echo "[ ${RED}Note${OFF} ] ${message}."
+                fi
+            fi
+        fi
+    fi
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
 function _getEDID()
 {
     gDisplayVendorID_RAW=$(ioreg -lw0 | grep -i "IODisplayEDID" | sed "/[^<]*</s///" | cut -c 17-20)
@@ -96,6 +132,10 @@ function _getEDID()
     gConfig=${REPO}/DisplayVendorID-$gDisplayVendorID_RAW/DisplayProductID-$gDisplayProductID_fix
 }
 
+#
+#--------------------------------------------------------------------------------
+#
+
 function _printHeader()
 {
     echo '<?xml version="1.0" encoding="UTF-8"?>'                                                                                       > "$gConfig"
@@ -113,6 +153,10 @@ function _printHeader()
     echo '</plist>'                                                                                                                    >> "$gConfig"
 }
 
+#
+#--------------------------------------------------------------------------------
+#
+
 function _create_dir()
 {
     if [ ! -d "$1" ];
@@ -122,6 +166,10 @@ function _create_dir()
     fi
 }
 
+#
+#--------------------------------------------------------------------------------
+#
+
 function _buildconfig()
 {
     _create_dir ${REPO}/backup
@@ -130,6 +178,10 @@ function _buildconfig()
 
 }
 
+#
+#--------------------------------------------------------------------------------
+#
+
 function _calcsRes()
 {
 	#
@@ -137,8 +189,8 @@ function _calcsRes()
 	#
     i=0
 
-		while [ "$gRes_RAW" != 0 ];
-    	do
+        while [ "$gRes_RAW" != 0 ];
+        do
         	read -p "Enter the Resolution you want to enable HiDPI(If you want to stop adding or say you just add enough number of HiDPI resolution you want, enter 0: " gRes_RAW
 
             if [[ $gRes_RAW != 0 ]];
@@ -196,10 +248,15 @@ function _calcsRes()
     	done
 }
 
+#
+#--------------------------------------------------------------------------------
+#
 
 function _OSCheck()
 {
+    #
     # Extract minor version (eg. 10.9 vs. 10.10 vs. 10.11)
+    #
     MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
     if [[ $MINOR_VER -ge 11 ]]; 
         then
@@ -209,6 +266,10 @@ function _OSCheck()
     fi
 }
 
+#
+#--------------------------------------------------------------------------------
+#
+
 function _patch()
 {
 	#
@@ -216,22 +277,35 @@ function _patch()
 	#
 	if [ $i != 0 ];
 		then
-			echo "Backuping origin Display Information..."
+			_PRINT_MSG "--->: Backuping origin Display Information..."
 			sudo cp -R "$gDespath" ${REPO}/backup
 			sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
-			sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled
+			sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
 			sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
-			echo "Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
+			_PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
 		else
-			echo "Since you stop the operation, don't worry all your files in system hasnt been touched."
+			_PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
 	fi
 }
 
-_getEDID
-_buildconfig
-_printHeader
-_calcsRes
-_OSCheck
-_patch
+#
+#--------------------------------------------------------------------------------
+#
+
+function main()
+{
+    _getEDID
+    _buildconfig
+    _printHeader
+    _calcsRes
+    _OSCheck
+    _patch
+}
+
+#==================================== START =====================================
+
+main
+
+#================================================================================
 
 exit 0
