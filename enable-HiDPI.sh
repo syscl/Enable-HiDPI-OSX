@@ -250,10 +250,6 @@ function _calcsRes()
         	fi
 
     	done
-
-    read -p "Please choose the desired resolution for your display: " selection
-    case "$(_toLowerCase $selection)" in
-      0
 }
 
 #
