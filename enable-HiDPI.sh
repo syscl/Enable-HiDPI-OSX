@@ -51,6 +51,8 @@ gWide_HiDPI_VAL=""
 gRes_HiDPI_VAL=""
 gRes_HiDPI_ENCODE=""
 gDespath=""
+gBak_Time=$(date +%Y-%m-%d-h%H_%M_%S)
+gBak_Dir="${REPO}/Display-Backups/${gBak_Time}"
 
 #
 # Repository location
@@ -70,29 +72,23 @@ function _PRINT_MSG()
 {
     local message=$1
 
-    if [[ $message =~ 'OK' ]];
-      then
-        local message=$(echo $message | sed -e 's/.*OK://')
-        echo "[  ${GREEN}OK${OFF}  ] ${message}."
-      else
-        if [[ $message =~ 'FAILED' ]];
-          then
-            local message=$(echo $message | sed -e 's/.*://')
-            echo "[${RED}FAILED${OFF}] ${message}."
-          else
-            if [[ $message =~ '--->' ]];
-              then
-                local message=$(echo $message | sed -e 's/.*--->://')
-                echo "[ ${GREEN}--->${OFF} ] ${message}"
-              else
-                if [[ $message =~ 'NOTE' ]];
-                  then
-                    local message=$(echo $message | sed -e 's/.*NOTE://')
-                    echo "[ ${RED}Note${OFF} ] ${message}."
-                fi
-            fi
-        fi
-    fi
+    case "$message" in
+      OK*    ) local message=$(echo $message | sed -e 's/.*OK://')
+               echo "[  ${GREEN}OK${OFF}  ] ${message}."
+               ;;
+
+      FAILED*) local message=$(echo $message | sed -e 's/.*://')
+               echo "[${RED}FAILED${OFF}] ${message}."
+               ;;
+
+      ---*   ) local message=$(echo $message | sed -e 's/.*--->://')
+               echo "[ ${GREEN}--->${OFF} ] ${message}"
+               ;;
+
+      NOTE*  ) local message=$(echo $message | sed -e 's/.*NOTE://')
+               echo "[ ${RED}Note${OFF} ] ${message}."
+               ;;
+    esac
 }
 
 #
@@ -160,9 +156,8 @@ function _printHeader()
 function _create_dir()
 {
     if [ ! -d "$1" ];
-        then
-        echo "${BLUE}[Creating directory]${OFF}: $1"
-        mkdir "$1"
+      then
+        mkdir -p "$1"
     fi
 }
 
@@ -172,10 +167,19 @@ function _create_dir()
 
 function _buildconfig()
 {
-    _create_dir ${REPO}/backup
+    _create_dir ${gBak_Dir}
     rm -R ${REPO}/DisplayVendorID-*
     _create_dir ${REPO}/DisplayVendorID-$gDisplayVendorID_RAW
 
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
+function _toLowerCase()
+{
+    echo "`echo $1 | tr '[:upper:]' '[:lower:]'`"
 }
 
 #
@@ -246,6 +250,10 @@ function _calcsRes()
         	fi
 
     	done
+
+    read -p "Please choose the desired resolution for your display: " selection
+    case "$(_toLowerCase $selection)" in
+      0
 }
 
 #
@@ -276,15 +284,15 @@ function _patch()
 	# Count number indicates patch system or not.
 	#
 	if [ $i != 0 ];
-		then
-			_PRINT_MSG "--->: Backuping origin Display Information..."
-			sudo cp -R "$gDespath" ${REPO}/backup
-			sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
-			sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
-			sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
-			_PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
-		else
-			_PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
+      then
+        _PRINT_MSG "--->: Backuping origin Display Information..."
+        sudo cp -R "$gDespath" ${gBak_Dir}
+        sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
+        sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
+        sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
+        _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
+      else
+        _PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
 	fi
 }
 
