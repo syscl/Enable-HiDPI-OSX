@@ -29,6 +29,7 @@ RED="\033[1;31m"
 GREEN="\033[1;32m"
 BLUE="\033[1;34m"
 OFF="\033[m"
+STYLE_UNDERLINED="\e[4m"
 
 #
 # Define variables.
@@ -97,15 +98,63 @@ function _PRINT_MSG()
 
 function _getEDID()
 {
-    gDisplayVendorID_RAW=$(ioreg -lw0 | grep -i "IODisplayEDID" | sed "/[^<]*</s///" | cut -c 17-20)
+    local index=0
+    local selection=0
+
+    gDisplayInf=($(ioreg -lw0 | grep -i "IODisplayEDID" | sed -e "/[^<]*</s///" -e "s/\>//"))
+
+    if [[ "${#gDisplayInf[@]}" -ge 2 ]];
+      then
+        #
+        # Multi monitors detected. Choose target monitor.
+        #
+        echo " Multi monitors detected, please choose target monitor: "
+        for display in "${gDisplayInf[@]}"
+        do
+          let index++
+          #
+          # Show monitors.
+          #
+          printf " [ %d ] ${display:16:4}::${display:20:4}" $index
+          echo ''
+        done
+        #
+        #
+        #
+        echo ''
+        #
+        # Let user make a selection.
+        #
+        printf "Please choose the desired display for enable Hi-DPI (${STYLE_UNDERLINED}E${OFF}xit/1-${index})"
+        read -p " ? " selection
+        case "$(_toLowerCase $selection)" in
+        e|exit       ) echo "Abort script."
+                       exit -0
+                       ;;
+
+        [[:digit:]]* ) #
+                       # Lower selection (arrays start at zero).
+                       #
+                       let selection-=1
+                       gMonitor=$(echo ${gDisplayInf[$selection])
+                       ;;
+
+        *            ) echo "Invalid menu action, please type valid among 1, ..., ${index}"
+                       ;;
+        esac
+      else
+        gMonitor=${gDisplayInf}
+    fi
+
+    gDisplayVendorID_RAW=$(echo ${gMonitor:16:4})
     gDisplayVendorID=$((0x$gDisplayVendorID_RAW))
-    gDisplayProductID_RAW=$(ioreg -lw0 | grep -i "IODisplayEDID" | sed "/[^<]*</s///" | cut -c 21-24)
+    gDisplayProductID_RAW=$(echo ${gMonitor:20:4})
 
     #
     # Exchange two bytes
     #
-    gDisplayProduct_pr=$(echo $gDisplayProductID_RAW | cut -c 3-4)
-    gDisplayProduct_st=$(echo $gDisplayProductID_RAW | cut -c 1-2)
+    gDisplayProduct_pr=$(echo ${gDisplayProductID_RAW:2:2})
+    gDisplayProduct_st=$(echo ${gDisplayProductID_RAW:0:2})
     gDisplayProductID_sfix=$(echo $gDisplayProduct_pr$gDisplayProduct_st)
     gDisplayProductID=$((0x$gDisplayProduct_pr$gDisplayProduct_st))
 
@@ -113,10 +162,10 @@ function _getEDID()
     # Fix an issue that will cause wrong name of DisplayProductID
     #
     if [[ $gDisplayProduct_pr == "0"* ]];
-        then
-            gDisplayProductID_fix=$(echo $gDisplayProductID_sfix | cut -c 2-4)
-        else
-            gDisplayProductID_fix=$(echo $gDisplayProductID_sfix)
+      then
+        gDisplayProductID_fix=$(echo ${gDisplayProductID_sfix:1:3})
+      else
+        gDisplayProductID_fix=$(echo $gDisplayProductID_sfix)
     fi
 
 #   echo $gDisplayVendorID_RAW
@@ -126,6 +175,15 @@ function _getEDID()
 #   echo $gDisplayProductID_fix
 
     gConfig=${REPO}/DisplayVendorID-$gDisplayVendorID_RAW/DisplayProductID-$gDisplayProductID_fix
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
+function _toLowerCase()
+{
+    echo "`echo $1 | tr '[:upper:]' '[:lower:]'`"
 }
 
 #

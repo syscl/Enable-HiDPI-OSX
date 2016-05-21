@@ -31,6 +31,11 @@ Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu
 
 Change Log
 ----------------
+2016-5-22
+
+- Added multi monitors/displays support credit @liusunpan see issue #4.
+- Optimised code.
+
 2016-3-4
 
 - Fixed a logical problem that casue the enable failure. Tested sucessfully on my HP 2009f @1600x900(now it can be switched to 1366x768, 1440x810.)
