@@ -31,6 +31,11 @@ Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu
 
 Change Log
 ----------------
+2016-5-23
+
+- Fixed logical issue that causes backup failure.
+- Optimised code.
+
 2016-5-22
 
 - Added multi monitors/displays support credit @liusunpan see issue #4.

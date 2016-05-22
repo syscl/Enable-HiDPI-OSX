@@ -32,6 +32,11 @@ OFF="\033[m"
 STYLE_UNDERLINED="\e[4m"
 
 #
+# Repository location
+#
+REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+#
 # Define variables.
 # Gvariables stands for getting datas from OS X.
 #
@@ -54,11 +59,6 @@ gRes_HiDPI_ENCODE=""
 gDespath=""
 gBak_Time=$(date +%Y-%m-%d-h%H_%M_%S)
 gBak_Dir="${REPO}/Display-Backups/${gBak_Time}"
-
-#
-# Repository location
-#
-REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 #
 # Define gConfig
@@ -146,15 +146,15 @@ function _getEDID()
         gMonitor=${gDisplayInf}
     fi
 
-    gDisplayVendorID_RAW=$(echo ${gMonitor:16:4})
+    gDisplayVendorID_RAW=${gMonitor:16:4}
     gDisplayVendorID=$((0x$gDisplayVendorID_RAW))
-    gDisplayProductID_RAW=$(echo ${gMonitor:20:4})
+    gDisplayProductID_RAW=${gMonitor:20:4}
 
     #
     # Exchange two bytes
     #
-    gDisplayProduct_pr=$(echo ${gDisplayProductID_RAW:2:2})
-    gDisplayProduct_st=$(echo ${gDisplayProductID_RAW:0:2})
+    gDisplayProduct_pr=${gDisplayProductID_RAW:2:2}
+    gDisplayProduct_st=${gDisplayProductID_RAW:0:2}
     gDisplayProductID_sfix=$(echo $gDisplayProduct_pr$gDisplayProduct_st)
     gDisplayProductID=$((0x$gDisplayProduct_pr$gDisplayProduct_st))
 
@@ -163,7 +163,7 @@ function _getEDID()
     #
     if [[ $gDisplayProduct_pr == "0"* ]];
       then
-        gDisplayProductID_fix=$(echo ${gDisplayProductID_sfix:1:3})
+        gDisplayProductID_fix=${gDisplayProductID_sfix:1:3}
       else
         gDisplayProductID_fix=$(echo $gDisplayProductID_sfix)
     fi
