@@ -136,7 +136,7 @@ function _getEDID()
                        # Lower selection (arrays start at zero).
                        #
                        let selection-=1
-                       gMonitor=$(echo ${gDisplayInf[$selection])
+                       gMonitor=${gDisplayInf[$selection]}
                        ;;
 
         *            ) echo "Invalid menu action, please type valid among 1, ..., ${index}"
