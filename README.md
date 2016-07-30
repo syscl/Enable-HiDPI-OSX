@@ -31,6 +31,10 @@ Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu
 
 Change Log
 ----------------
+2016-7-30
+
+- Optimised message display, more precise and easier to read credit @transtone.
+
 2016-5-24
 
 - Fixed major bug.
