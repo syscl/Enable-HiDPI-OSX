@@ -181,15 +181,6 @@ function _getEDID()
 #--------------------------------------------------------------------------------
 #
 
-function _toLowerCase()
-{
-    echo "`echo $1 | tr '[:upper:]' '[:lower:]'`"
-}
-
-#
-#--------------------------------------------------------------------------------
-#
-
 function _printHeader()
 {
     echo '<?xml version="1.0" encoding="UTF-8"?>'                                                                                       > "$gConfig"
