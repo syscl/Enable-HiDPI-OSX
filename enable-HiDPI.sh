@@ -32,6 +32,13 @@ OFF="\033[m"
 STYLE_UNDERLINED="\e[4m"
 
 #
+# Define two status: 0 - Success, Turn on,
+#                    1 - Failure, Turn off
+#
+kBASHReturnSuccess=0
+kBASHReturnFailure=1
+
+#
 # Repository location
 #
 REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -90,6 +97,54 @@ function _PRINT_MSG()
                echo "[ ${RED}Note${OFF} ] ${message}."
                ;;
     esac
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
+function _tidy_exec()
+{
+    if [ $gDebug -eq 0 ];
+      then
+        #
+        # Using debug mode to output all the details.
+        #
+        _PRINT_MSG "DEBUG: $2"
+        $1
+      else
+        #
+        # Make the output clear.
+        #
+        $1 >/tmp/report 2>&1 && RETURN_VAL=${kBASHReturnSuccess} || RETURN_VAL=${kBASHReturnFailure}
+
+        if [ "${RETURN_VAL}" == ${kBASHReturnSuccess} ];
+          then
+            _PRINT_MSG "OK: $2"
+          else
+            _PRINT_MSG "FAILED: $2"
+            cat /tmp/report
+        fi
+
+        rm /tmp/report &> /dev/null
+    fi
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
+function _find_plistbuddy()
+{
+    #
+    # Check if plistBuddy is in place.
+    #
+    if [ ! -f /usr/libexec/plistbuddy ];
+      then
+        _PRINT_MSG "--->: Downloading plistbuddy ..."
+        _tidy_exec "sudo curl https://raw.github.com/syscl/Enable-HiDPI-OSX/master/Tools/plistbuddy -o /usr/libexec/plistbuddy --create-dirs" "Install plistbuddy"
+        _tidy_exec "sudo chmod +x /usr/libexec/plistbuddy" "Change the permissions of plistbuddy (add +x) so that it can be run"
+    fi
 }
 
 #
@@ -214,12 +269,30 @@ function _create_dir()
 #--------------------------------------------------------------------------------
 #
 
+function _del()
+{
+    local target_file=$1
+
+    if [ -d ${target_file} ];
+      then
+        _tidy_exec "sudo rm -R ${target_file}" "Remove ${target_file}"
+      else
+        if [ -f ${target_file} ];
+          then
+            _tidy_exec "sudo rm ${target_file}" "Remove ${target_file}"
+        fi
+    fi
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
 function _buildconfig()
 {
     _create_dir ${gBak_Dir}
-    rm -R ${REPO}/DisplayVendorID-*
+    _del ${REPO}/DisplayVendorID-*
     _create_dir ${REPO}/DisplayVendorID-$gDisplayVendorID_RAW
-
 }
 
 #
@@ -242,63 +315,61 @@ function _calcsRes()
 	#
     i=0
 
-        while [ "$gRes_RAW" != 0 ];
-        do
-        	read -p "Enter the Resolution you want to enable HiDPI(e.g. 1600x900, 1440x910, ...), enter 0 to quit: " gRes_RAW
+    while [ "$gRes_RAW" != 0 ];
+    do
+      read -p "Enter the Resolution you want to enable HiDPI(e.g. 1600x900, 1440x910, ...), enter 0 to quit: " gRes_RAW
 
-            if [[ $gRes_RAW != 0 ]];
-                then
-            		#
-            		# Raw Datas
-            		#
-            		gHeightVAL=$(echo $gRes_RAW | cut -f 1 -d "x")
-            		gWideVAL=$(echo $gRes_RAW | cut -f 2 -d "x")
+      if [[ $gRes_RAW != 0 ]];
+        then
+          #
+          # Raw Datas
+          #
+          gHeightVAL=$(echo $gRes_RAW | cut -f 1 -d "x")
+          gWideVAL=$(echo $gRes_RAW | cut -f 2 -d "x")
 
+          #
+          # HiDPI (note that for enable HiDPI, all Height and Val must be twice
+          #
+          gHeight_HiDPI_VAL=$(echo $((gHeightVAL*2)))
+          gWide_HiDPI_VAL=$(echo $((gWideVAL*2)))
+          #echo $gHeight_HiDPI_VAL
+          #echo $gWide_HiDPI_VAL
 
-            		#
-            		# HiDPI (note that for enable HiDPI, all Height and Val must be twice
-            		#
-            		gHeight_HiDPI_VAL=$(echo $((gHeightVAL*2)))
-            		gWide_HiDPI_VAL=$(echo $((gWideVAL*2)))
-            		#echo $gHeight_HiDPI_VAL
-            		#echo $gWide_HiDPI_VAL
+          #
+          # Convet Height and Wide(decimal) into hex
+          #
+          gHeight=$(echo "obase=16;$gHeightVAL" | bc)
+          gWide=$(echo "obase=16;$gWideVAL" | bc)
 
-            		#
-            		# Convet Height and Wide(decimal) into hex
-            		#
-            		gHeight=$(echo "obase=16;$gHeightVAL" | bc)
-            		gWide=$(echo "obase=16;$gWideVAL" | bc)
+          gHeight_HiDPI=$(echo "obase=16;$gHeight_HiDPI_VAL" | bc)
+          gWide_HiDPI=$(echo "obase=16;$gWide_HiDPI_VAL" | bc)
 
-            		gHeight_HiDPI=$(echo "obase=16;$gHeight_HiDPI_VAL" | bc)
-            		gWide_HiDPI=$(echo "obase=16;$gWide_HiDPI_VAL" | bc)
+          #
+          # Generate Resolution Values (Hex)
+          #
+          gRes_VAL=$(echo "00000$gHeight 00000$gWide 00000001 00200000")
+          gRes_HiDPI_VAL=$(echo "00000$gHeight_HiDPI 00000$gWide_HiDPI 00000001 00200000")
 
-            		#
-            		# Generate Resolution Values (Hex)
-            		#
-            		gRes_VAL=$(echo "00000$gHeight 00000$gWide 00000001 00200000")
-            		gRes_HiDPI_VAL=$(echo "00000$gHeight_HiDPI 00000$gWide_HiDPI 00000001 00200000")
+          #
+          # Encode Resolution Values(Hex) into base64
+          #
+          gRes_ENCODE=$(echo $gRes_VAL | xxd -r -p | base64)
+          gRes_HiDPI_ENCODE=$(echo $gRes_HiDPI_VAL | xxd -r -p | base64)
 
-            		#
-            		# Encode Resolution Values(Hex) into base64
-            		#
-            		gRes_ENCODE=$(echo $gRes_VAL | xxd -r -p | base64)
-            		gRes_HiDPI_ENCODE=$(echo $gRes_HiDPI_VAL | xxd -r -p | base64)
+          #
+          # Inject HiDPI values.
+          #
+          /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
+          /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_ENCODE" $gConfig
 
-            		#
-            		# Inject HiDPI values.
-            		#
-            		/usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
-            		/usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_ENCODE" $gConfig
+          /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$((i+1))' string" $gConfig
+          /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$((i+1))' $gRes_HiDPI_ENCODE" $gConfig
 
-            		/usr/libexec/plistbuddy -c "Add ':scale-resolutions:$((i+1))' string" $gConfig
-            		/usr/libexec/plistbuddy -c "Set ':scale-resolutions:$((i+1))' $gRes_HiDPI_ENCODE" $gConfig
-
-            		perl -pi -e 's/string/data/g' $gConfig
-                	gRes_RAW=""
-                	i=$(($i+1))
-        	fi
-
-    	done
+          perl -pi -e 's/string/data/g' $gConfig
+          gRes_RAW=""
+          i=$(($i+1))
+      fi
+    done
 }
 
 #
@@ -312,10 +383,10 @@ function _OSCheck()
     #
     MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
     if [[ $MINOR_VER -ge 11 ]]; 
-        then
-            gDespath=$(echo "/System/Library/Displays/Contents/Resources/Overrides/")
-        else
-            gDespath=$(echo "/System/Library/Displays/Overrides/")
+      then
+        gDespath=$(echo "/System/Library/Displays/Contents/Resources/Overrides/")
+      else
+        gDespath=$(echo "/System/Library/Displays/Overrides/")
     fi
 }
 
@@ -333,9 +404,12 @@ function _patch()
         _PRINT_MSG "--->: Backuping origin Display Information..."
         sudo cp -R "$gDespath" ${gBak_Dir}
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
+    if [ -f /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled ];
+      then
         sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
+    fi
         sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
-        _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Menu Display to select the HiDPI resolution!"
+        _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Display Menu(RDM) to select the HiDPI resolution!"
       else
         _PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
 	fi
@@ -347,6 +421,24 @@ function _patch()
 
 function main()
 {
+    #
+    # Get argument.
+    #
+    gArgv=$(echo "$@" | tr '[:lower:]' '[:upper:]')
+    if [[ $# -eq 1 && "$gArgv" == "-D" || "$gArgv" == "-DEBUG" ]];
+      then
+        #
+        # Yes, we do need debug mode.
+        #
+        _PRINT_MSG "NOTE: Use ${BLUE}DEBUG${OFF} mode"
+        gDebug=0
+      else
+        #
+        # No, we need a clean output style.
+        #
+        gDebug=1
+    fi
+
     _getEDID
     _buildconfig
     _printHeader
@@ -357,7 +449,7 @@ function main()
 
 #==================================== START =====================================
 
-main
+main "$@"
 
 #================================================================================
 
