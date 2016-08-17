@@ -246,6 +246,8 @@ function _printHeader()
     echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
     echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
     echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
+    echo '<key>dmdg</key>'                                                                                                             >> "$gConfig"
+    echo '<data>AAAAAg==</data>'                                                                                                       >> "$gConfig"
     echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
     echo '	<array>'                                                                                                                   >> "$gConfig"
     echo '	</array>'                                                                                                                  >> "$gConfig"
@@ -310,9 +312,9 @@ function _toLowerCase()
 
 function _calcsRes()
 {
-	#
-	# Increment i stands for adding arrays.
-	#
+    #
+    # Increment i stands for adding arrays.
+    #
     i=0
 
     while [ "$gRes_RAW" != 0 ];
