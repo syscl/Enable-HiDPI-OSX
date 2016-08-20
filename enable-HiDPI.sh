@@ -398,23 +398,25 @@ function _OSCheck()
 
 function _patch()
 {
-	#
-	# Count number indicates patch system or not.
-	#
-	if [ $i != 0 ];
+    #
+    # Count number indicates patch system or not.
+    #
+    if [ $i != 0 ];
       then
         _PRINT_MSG "--->: Backuping origin Display Information..."
         sudo cp -R "$gDespath" ${gBak_Dir}
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
-    if [ -f "/Library/Preferences/com.apple.windowserver" ];
-      then
-        sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
-    fi
+
+        if [ -f "/Library/Preferences/com.apple.windowserver" ];
+          then
+            sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
+        fi
+
         sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
         _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Display Menu(RDM) to select the HiDPI resolution!"
       else
         _PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
-	fi
+    fi
 }
 
 #
