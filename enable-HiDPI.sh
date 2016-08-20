@@ -246,8 +246,8 @@ function _printHeader()
     echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
     echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
     echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
-    echo '<key>dmdg</key>'                                                                                                             >> "$gConfig"
-    echo '<data>AAAAAg==</data>'                                                                                                       >> "$gConfig"
+    echo '  <key>dmdg</key>'                                                                                                           >> "$gConfig"
+    echo '  <data>AAAAAg==</data>'                                                                                                     >> "$gConfig"
     echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
     echo '	<array>'                                                                                                                   >> "$gConfig"
     echo '	</array>'                                                                                                                  >> "$gConfig"
@@ -406,7 +406,7 @@ function _patch()
         _PRINT_MSG "--->: Backuping origin Display Information..."
         sudo cp -R "$gDespath" ${gBak_Dir}
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
-    if [ -f /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled ];
+    if [ -f "/Library/Preferences/com.apple.windowserver" ];
       then
         sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
     fi
