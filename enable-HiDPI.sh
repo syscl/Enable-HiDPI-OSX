@@ -329,28 +329,15 @@ function _calcsRes()
           gHeightVAL=$(echo $gRes_RAW | cut -f 1 -d "x")
           gWideVAL=$(echo $gRes_RAW | cut -f 2 -d "x")
 
-          #
-          # HiDPI (note that for enable HiDPI, all Height and Val must be twice
-          #
-          gHeight_HiDPI_VAL=$(echo $((gHeightVAL*2)))
-          gWide_HiDPI_VAL=$(echo $((gWideVAL*2)))
-          #echo $gHeight_HiDPI_VAL
-          #echo $gWide_HiDPI_VAL
-
-          #
-          # Convet Height and Wide(decimal) into hex
-          #
-          gHeight=$(echo "obase=16;$gHeightVAL" | bc)
-          gWide=$(echo "obase=16;$gWideVAL" | bc)
-
-          gHeight_HiDPI=$(echo "obase=16;$gHeight_HiDPI_VAL" | bc)
-          gWide_HiDPI=$(echo "obase=16;$gWide_HiDPI_VAL" | bc)
 
           #
           # Generate Resolution Values (Hex)
           #
-          gRes_VAL=$(echo "00000$gHeight 00000$gWide 00000001 00200000")
-          gRes_HiDPI_VAL=$(echo "00000$gHeight_HiDPI 00000$gWide_HiDPI 00000001 00200000")
+          gRes_VAL=$(printf '%08x ' "$gheight" "$gwide" $((0x1)) $((0x200000)))
+          gRes_VAL=${gRes_Val% }
+          # HiDPI is twice the size.
+          gRes_HiDPI_VAL=$(printf '%08x ' $((gheight*2)) $((gwide*2)) $((0x1)) $((0x200000)))
+          gRes_HiDPI_VAL=${gRes_HiDPI_Val% }
 
           #
           # Encode Resolution Values(Hex) into base64
