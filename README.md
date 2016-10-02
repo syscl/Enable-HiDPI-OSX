@@ -31,6 +31,10 @@ Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu
 
 Change Log
 ----------------
+2016-10-1
+
+- Fixed variable errors/typo, fully support for 4K display credit @Artoria2e5.
+
 2016-7-30
 
 - Optimised message display, more precise and easier to read credit @transtone.
