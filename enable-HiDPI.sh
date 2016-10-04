@@ -333,9 +333,9 @@ function _calcsRes()
           #
           # Generate Resolution Values (Hex)
           #
-          gRes_VAL=$(printf '%08x %08x 00000001 02000000' $gHeight $gWidth)
+          gRes_VAL=$(printf '%08x %08x 00000001 02000000' $gHeightVAL $gWideVAL)
           # HiDPI is twice the size.
-          gRes_HiDPI_VAL=$(printf '%08x %08x 00000001 02000000' $((gHeight*2)) $((gWidth*2)))
+          gRes_HiDPI_VAL=$(printf '%08x %08x 00000001 02000000' $((gHeightVAL*2)) $((gWideVAL*2)))
 
           #
           # Encode Resolution Values(Hex) into base64
