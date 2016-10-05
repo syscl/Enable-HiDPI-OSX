@@ -10,7 +10,7 @@
 
 #
 # The script expects '0.5' but non-US localizations use '0,5' so we export
-# LC_NUMERIC here (for the duration of the ssdtPRGen.sh) to prevent errors.
+# LC_NUMERIC here (for the duration of the enable-HiDPI.sh) to prevent errors.
 #
 export LC_NUMERIC="en_US.UTF-8"
 
@@ -230,6 +230,17 @@ function _getEDID()
 #   echo $gDisplayProductID_fix
 
     gConfig=${REPO}/DisplayVendorID-$gDisplayVendorID_RAW/DisplayProductID-$gDisplayProductID_fix
+
+    #
+    # PMheart - We can do nothing for VID = 0x610 (Apple).
+    # Reasons: 0x610 contains something more like icns, and some important data.
+    #
+    if [[ ${gDisplayVendorID} -eq 0x610 ]];
+      then
+        echo
+        echo "${RED}An Apple Monitor detected. It's not supported by this script!${OFF}"
+        exit 1
+    fi
 }
 
 #
@@ -246,8 +257,14 @@ function _printHeader()
     echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
     echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
     echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
-    echo '  <key>dmdg</key>'                                                                                                           >> "$gConfig"
-    echo '  <data>AAAAAg==</data>'                                                                                                     >> "$gConfig"
+
+    #
+    # PMheart - 'dmdg' is an Apple-specialized key and do nothing for our non-Apple Monitors.
+    #
+
+    # echo '  <key>dmdg</key>'                                                                                                         >> "$gConfig"
+    # echo '  <data>AAAAAg==</data>'                                                                                                   >> "$gConfig"
+
     echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
     echo '	<array>'                                                                                                                   >> "$gConfig"
     echo '	</array>'                                                                                                                  >> "$gConfig"
@@ -329,7 +346,6 @@ function _calcsRes()
           gHeightVAL=$(echo $gRes_RAW | cut -f 1 -d "x")
           gWideVAL=$(echo $gRes_RAW | cut -f 2 -d "x")
 
-
           #
           # Generate Resolution Values (Hex)
           #
@@ -388,7 +404,7 @@ function _patch()
     #
     if [ $i != 0 ];
       then
-        _PRINT_MSG "--->: Backuping origin Display Information..."
+        _PRINT_MSG "--->: Backuping original Display Information..."
         sudo cp -R "$gDespath" ${gBak_Dir}
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
 
@@ -398,9 +414,9 @@ function _patch()
         fi
 
         sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
-        _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Display Menu(RDM) to select the HiDPI resolution!"
+        _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to using Retina Display Menu(RDM) to select the HiDPI resolution!"
       else
-        _PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
+        _PRINT_MSG "NOTE: Since you stopped the operation, don't worry all your files in system hasn't been touched."
     fi
 }
 
