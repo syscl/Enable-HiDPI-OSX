@@ -10,7 +10,7 @@
 
 #
 # The script expects '0.5' but non-US localizations use '0,5' so we export
-# LC_NUMERIC here (for the duration of the ssdtPRGen.sh) to prevent errors.
+# LC_NUMERIC here (for the duration of the enable-HiDPI.sh) to prevent errors.
 #
 export LC_NUMERIC="en_US.UTF-8"
 
@@ -246,8 +246,8 @@ function _printHeader()
     echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
     echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
     echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
-    echo '  <key>dmdg</key>'                                                                                                           >> "$gConfig"
-    echo '  <data>AAAAAg==</data>'                                                                                                     >> "$gConfig"
+#   echo '  <key>dmdg</key>'                                                                                                           >> "$gConfig"
+#   echo '  <data>AAAAAg==</data>'                                                                                                     >> "$gConfig"
     echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
     echo '	<array>'                                                                                                                   >> "$gConfig"
     echo '	</array>'                                                                                                                  >> "$gConfig"
