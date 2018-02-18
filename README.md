@@ -31,6 +31,10 @@ Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu
 
 Change Log
 ----------------
+2018-02-17
+
+- Fixed ```HiDPI``` inject issue on ```10.12+```
+
 2016-10-4
 
 - Fixed Artoria2e5's typo credit @jqqqqqqqqqq
