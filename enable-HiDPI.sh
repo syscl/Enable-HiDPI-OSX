@@ -346,11 +346,11 @@ function _calcsRes()
           #
           # Inject HiDPI values.
           #
-          /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
-          /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_ENCODE" $gConfig
+          # /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
+          # /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_ENCODE" $gConfig
 
-          /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$((i+1))' string" $gConfig
-          /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$((i+1))' $gRes_HiDPI_ENCODE" $gConfig
+          /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
+          /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_HiDPI_ENCODE" $gConfig
 
           perl -pi -e 's/string/data/g' $gConfig
           gRes_RAW=""
