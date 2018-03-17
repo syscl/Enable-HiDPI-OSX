@@ -31,6 +31,11 @@ Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu
 
 Change Log
 ----------------
+2018-03-16
+
+- More lightweight program by removing ```plistbuddy```
+- Cleanup redudant code
+
 2018-02-17
 
 - Fixed ```HiDPI``` inject issue on ```10.12+```
