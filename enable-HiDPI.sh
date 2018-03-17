@@ -134,23 +134,6 @@ function _tidy_exec()
 #--------------------------------------------------------------------------------
 #
 
-function _find_plistbuddy()
-{
-    #
-    # Check if plistBuddy is in place.
-    #
-    if [ ! -f /usr/libexec/plistbuddy ];
-      then
-        _PRINT_MSG "--->: Downloading plistbuddy ..."
-        _tidy_exec "sudo curl https://raw.github.com/syscl/Enable-HiDPI-OSX/master/Tools/plistbuddy -o /usr/libexec/plistbuddy --create-dirs" "Install plistbuddy"
-        _tidy_exec "sudo chmod +x /usr/libexec/plistbuddy" "Change the permissions of plistbuddy (add +x) so that it can be run"
-    fi
-}
-
-#
-#--------------------------------------------------------------------------------
-#
-
 function _getEDID()
 {
     local index=0
@@ -238,21 +221,27 @@ function _getEDID()
 
 function _printHeader()
 {
-    echo '<?xml version="1.0" encoding="UTF-8"?>'                                                                                       > "$gConfig"
-    echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'                      >> "$gConfig"
-    echo '<plist version="1.0">'                                                                                                       >> "$gConfig"
-    echo '<dict>'                                                                                                                      >> "$gConfig"
-    echo '	<key>DisplayProductID</key>'                                                                                               >> "$gConfig"
-    echo "	<integer>${gDisplayProductID}</integer>"                                                                                   >> "$gConfig"
-    echo '	<key>DisplayVendorID</key>'                                                                                                >> "$gConfig"
-    echo "	<integer>${gDisplayVendorID}</integer>"                                                                                    >> "$gConfig"
-#   echo '  <key>dmdg</key>'                                                                                                           >> "$gConfig"
-#   echo '  <data>AAAAAg==</data>'                                                                                                     >> "$gConfig"
-    echo '	<key>scale-resolutions</key>'                                                                                              >> "$gConfig"
-    echo '	<array>'                                                                                                                   >> "$gConfig"
-    echo '	</array>'                                                                                                                  >> "$gConfig"
-    echo '</dict>'                                                                                                                     >> "$gConfig"
-    echo '</plist>'                                                                                                                    >> "$gConfig"
+    echo '<?xml version="1.0" encoding="UTF-8"?>'
+    echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+    echo '<plist version="1.0">'
+    echo '<dict>'
+    printf '\t<key>DisplayProductID</key>\n'
+    printf "\t<integer>${gDisplayProductID}</integer>\n"
+    printf '\t<key>DisplayVendorID</key>\n'
+    printf "\t<integer>${gDisplayVendorID}</integer>\n"
+    printf '\t<key>scale-resolutions</key>\n'
+    printf '\t<array>\n'
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
+function _closeField()
+{
+    printf '\t</array>\n'
+    echo '</dict>'
+    echo '</plist>'
 }
 
 #
@@ -346,13 +335,8 @@ function _calcsRes()
           #
           # Inject HiDPI values.
           #
-          # /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
-          # /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_ENCODE" $gConfig
+          printf "\t\t<data>${gRes_HiDPI_ENCODE}</data>\n" >> "$gConfig"
 
-          /usr/libexec/plistbuddy -c "Add ':scale-resolutions:$i' string" $gConfig
-          /usr/libexec/plistbuddy -c "Set ':scale-resolutions:$i' $gRes_HiDPI_ENCODE" $gConfig
-
-          perl -pi -e 's/string/data/g' $gConfig
           gRes_RAW=""
           i=$(($i+1))
       fi
@@ -371,9 +355,9 @@ function _OSCheck()
     MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
     if [[ $MINOR_VER -ge 11 ]]; 
       then
-        gDespath=$(echo "/System/Library/Displays/Contents/Resources/Overrides/")
+        gDespath="/System/Library/Displays/Contents/Resources/Overrides/"
       else
-        gDespath=$(echo "/System/Library/Displays/Overrides/")
+        gDespath="/System/Library/Displays/Overrides/"
     fi
 }
 
@@ -430,8 +414,9 @@ function main()
 
     _getEDID
     _buildconfig
-    _printHeader
+    _printHeader > "$gConfig"
     _calcsRes
+    _closeField  >>"$gConfig"
     _OSCheck
     _patch
 }
