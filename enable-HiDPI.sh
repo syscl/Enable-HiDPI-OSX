@@ -386,7 +386,7 @@ function _patch()
     #
     if [ $i != 0 ];
       then
-        _tidy_exec "cp -R "$gDespath" ${gBak_Dir}" "Backuping $gDespath"
+        _tidy_exec "cp -R "$gDespath" ${gBak_Dir}" "Backup $gDespath"
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
 
         if [ -f "/Library/Preferences/com.apple.windowserver" ];
@@ -397,7 +397,7 @@ function _patch()
         sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
         _PRINT_MSG "OK: Done. Reboot then use Retina Display Menu (RDM) to select the HiDPI resolution just injected!"
       else
-        _PRINT_MSG "NOTE: All system files remains unchanged."
+        _PRINT_MSG "NOTE: All system files remain unchanged."
     fi
 }
 
