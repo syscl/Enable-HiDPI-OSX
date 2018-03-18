@@ -1,9 +1,9 @@
-Enable HiDPI on OS X
+Enable HiDPI on macOS
 ============
 
-Hola, this is an ongoing project targets at enable the support of HiDPI for display with a high resolution under OS X(10.9, 10.10, 10.11). AFAIK, there is various way to patch/force the HiDPI mode, however, I want to create a more precise and clean way to patch the system. That's why I start to build this project. 
+Hola, this is an ongoing project targets at enable the support of HiDPI for display with a high resolution under macOS. AFAIK, there is various way to patch/force the HiDPI mode, however, I want to create a more precise and clean way to patch the system. That's why I start to build this project.
 
-I know there's still long way to go, but this time, I want to share this patch ASAP. All the suggestions are welcome. I just added a new function(or say more precisely, a more complete script) which can add as much as HiDPI resolutions you want at the same time. Wish you will enjoy! lighting/syscl/Yating Zhou :-)
+I know there's still long way to go, but this time, I want to share this patch ASAP. All the suggestions are welcome. I just added a new function which can add as much as HiDPI resolutions you want at the same time. Wish you will enjoy it!
 
 How to use?
 ----------------
@@ -27,10 +27,14 @@ Run the script in a terminal window by:
 ~/enable-HiDPI.sh
 ```
 
-Once you finish injecting the HiDPI values, reboot your OS X and use Retina Menu Display to choose the resolution you want.
+Once you finish injecting the HiDPI values, reboot your OS X and use Retina Display Menu  (RDM) to choose the resolution you want.
 
 Change Log
 ----------------
+2018-03-18
+
+- Fixed the issue #16 and issue #32 by removing the redundant prefix
+
 2018-03-16
 
 - More lightweight program by removing ```plistbuddy```

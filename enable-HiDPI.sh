@@ -50,8 +50,7 @@ REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 gDisplayVendorID_RAW=""
 gDisplayVendorID=""
 gDisplayProductID_RAW=""
-gDisplayProductID_sfix=""
-gDisplayProductID_fix=""
+gDisplayProductID_reverse=""
 gDisplayProductID=""
 gConfig=""
 gRes_RAW="F"
@@ -146,27 +145,34 @@ function _getEDID()
         #
         # Multi monitors detected. Choose target monitor.
         #
-        echo " Multi monitors detected, please choose target monitor: "
+        echo '         Table of monitors          '
+        echo '------------------------------------'
+        echo '  Index  |  VendorID  |  ProductID  '
+        echo '------------------------------------'
         for display in "${gDisplayInf[@]}"
         do
           let index++
           #
           # Show monitors.
           #
-          printf " [ %d ] ${display:16:4}::${display:20:4}" $index
-          echo ''
+          printf "    %d    |    ${display:16:4}    |    ${display:20:4}\n" $index
         done
         #
+        # Close the table
         #
-        #
-        echo ''
+        echo '------------------------------------'
         #
         # Let user make a selection.
         #
-        printf "Please choose the desired display for enable Hi-DPI (${STYLE_UNDERLINED}E${OFF}xit/1-${index})"
-        read -p " ? " selection
+        printf 'Choose the display to enable HiDPI'
+        if [[ "${#gDisplayInf[@]}" == 2 ]]; then
+            printf "[${STYLE_UNDERLINED}E${OFF}xit/1/2]"
+        else
+            printf "[${STYLE_UNDERLINED}E${OFF}xit/1-${index}]"
+        fi
+        read -p ": " selection
         case "$(_toLowerCase $selection)" in
-        e|exit       ) echo "Abort script."
+        e|exit       ) echo "Abort."
                        exit -0
                        ;;
 
@@ -177,42 +183,49 @@ function _getEDID()
                        gMonitor=${gDisplayInf[$selection]}
                        ;;
 
-        *            ) echo "Invalid menu action, please type valid among 1, ..., ${index}"
+        *            )  if [[ "${#gDisplayInf[@]}" == 2  ]]; then
+                            echo 'Invalid menu action, enter 1 or 2'
+                        else
+                            echo "Invalid menu action, enter valid number among 1, ..., ${index}"
+                        fi
                        ;;
         esac
       else
         gMonitor=${gDisplayInf}
     fi
-
-    gDisplayVendorID_RAW=${gMonitor:16:4}
+    #
+    # Fix for issue #16 and #32
+    #
+    if [[ ${gMonitor:16:1} == 0 ]]; then
+        # get rid of the prefix 0
+        gDisplayVendorID_RAW=${gMonitor:17:3}
+    else
+        gDisplayVendorID_RAW=${gMonitor:16:4}
+    fi
+    # convert from hex to dec
     gDisplayVendorID=$((0x$gDisplayVendorID_RAW))
     gDisplayProductID_RAW=${gMonitor:20:4}
-
     #
     # Exchange two bytes
     #
-    gDisplayProduct_pr=${gDisplayProductID_RAW:2:2}
-    gDisplayProduct_st=${gDisplayProductID_RAW:0:2}
-    gDisplayProductID_sfix=$(echo $gDisplayProduct_pr$gDisplayProduct_st)
-    gDisplayProductID=$((0x$gDisplayProduct_pr$gDisplayProduct_st))
-
-    #
     # Fix an issue that will cause wrong name of DisplayProductID
     #
-    if [[ $gDisplayProduct_pr == "0"* ]];
-      then
-        gDisplayProductID_fix=${gDisplayProductID_sfix:1:3}
-      else
-        gDisplayProductID_fix=$(echo $gDisplayProductID_sfix)
+    if [[ ${gDisplayProductID_RAW:2:1} == 0 ]]; then
+        # get rid of the prefix 0
+        gDisplayProduct_pr=${gDisplayProductID_RAW:3:1}
+    else
+        gDisplayProduct_pr=${gDisplayProductID_RAW:2:2}
     fi
+    gDisplayProduct_st=${gDisplayProductID_RAW:0:2}
+    gDisplayProductID_reverse="${gDisplayProduct_pr}${gDisplayProduct_st}"
+    gDisplayProductID=$((0x$gDisplayProduct_pr$gDisplayProduct_st))
 
 #   echo $gDisplayVendorID_RAW
 #   echo $gDisplayVendorID
 #   echo $gDisplayProductID_RAW
 #   echo $gDisplayProductID
-#   echo $gDisplayProductID_fix
 
-    gConfig=${REPO}/DisplayVendorID-$gDisplayVendorID_RAW/DisplayProductID-$gDisplayProductID_fix
+    gConfig=${REPO}/DisplayVendorID-$gDisplayVendorID_RAW/DisplayProductID-$gDisplayProductID_reverse
 }
 
 #
@@ -308,7 +321,8 @@ function _calcsRes()
 
     while [ "$gRes_RAW" != 0 ];
     do
-      read -p "Enter the Resolution you want to enable HiDPI(e.g. 1600x900, 1440x910, ...), enter 0 to quit: " gRes_RAW
+      printf "Enter the HiDPI resolution (e.g. 1600x900, 1440x910, ...), ${BOLD}0${OFF} to quit"
+      read -p ": " gRes_RAW
 
       if [[ $gRes_RAW != 0 ]];
         then
@@ -355,9 +369,9 @@ function _OSCheck()
     MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
     if [[ $MINOR_VER -ge 11 ]]; 
       then
-        gDespath="/System/Library/Displays/Contents/Resources/Overrides/"
+        gDespath="/System/Library/Displays/Contents/Resources/Overrides/DisplayVendorID-$gDisplayVendorID_RAW"
       else
-        gDespath="/System/Library/Displays/Overrides/"
+        gDespath="/System/Library/Displays/Overrides/DisplayVendorID-$gDisplayVendorID_RAW"
     fi
 }
 
@@ -372,8 +386,7 @@ function _patch()
     #
     if [ $i != 0 ];
       then
-        _PRINT_MSG "--->: Backuping origin Display Information..."
-        sudo cp -R "$gDespath" ${gBak_Dir}
+        _tidy_exec "cp -R "$gDespath" ${gBak_Dir}" "Backuping $gDespath"
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
 
         if [ -f "/Library/Preferences/com.apple.windowserver" ];
@@ -382,9 +395,9 @@ function _patch()
         fi
 
         sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
-        _PRINT_MSG "OK: Done, Please Reboot to see the change! Pay attention to use Retina Display Menu(RDM) to select the HiDPI resolution!"
+        _PRINT_MSG "OK: Done. Reboot then use Retina Display Menu (RDM) to select the HiDPI resolution just injected!"
       else
-        _PRINT_MSG "NOTE: Since you stop the operation, don't worry all your files in system hasnt been touched."
+        _PRINT_MSG "NOTE: All system files remains unchanged."
     fi
 }
 
