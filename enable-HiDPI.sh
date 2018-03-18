@@ -279,11 +279,11 @@ function _del()
 
     if [ -d ${target_file} ];
       then
-        _tidy_exec "sudo rm -R ${target_file}" "Remove ${target_file}"
+        _tidy_exec "rm -R ${target_file}" "Remove old ${target_file}"
       else
         if [ -f ${target_file} ];
           then
-            _tidy_exec "sudo rm ${target_file}" "Remove ${target_file}"
+            _tidy_exec "rm ${target_file}" "Remove old ${target_file}"
         fi
     fi
 }
@@ -292,7 +292,7 @@ function _del()
 #--------------------------------------------------------------------------------
 #
 
-function _buildconfig()
+function _cleanup()
 {
     _create_dir ${gBak_Dir}
     _del ${REPO}/DisplayVendorID-*
@@ -426,7 +426,7 @@ function main()
     fi
 
     _getEDID
-    _buildconfig
+    _cleanup
     _printHeader > "$gConfig"
     _calcsRes
     _closeField  >>"$gConfig"
