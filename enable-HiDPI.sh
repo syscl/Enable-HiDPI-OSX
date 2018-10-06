@@ -62,7 +62,7 @@ gHeight_HiDPI_VAL=""
 gWide_HiDPI_VAL=""
 gRes_HiDPI_VAL=""
 gRes_HiDPI_ENCODE=""
-gDespath=""
+gDstPath=""
 gBak_Time=$(date +%Y-%m-%d-h%H_%M_%S)
 gBak_Dir="${REPO}/Display-Backups/${gBak_Time}"
 
@@ -369,9 +369,9 @@ function _OSCheck()
     MINOR_VER=$([[ "$(sw_vers -productVersion)" =~ [0-9]+\.([0-9]+) ]] && echo ${BASH_REMATCH[1]})
     if [[ $MINOR_VER -ge 11 ]]; 
       then
-        gDespath="/System/Library/Displays/Contents/Resources/Overrides/DisplayVendorID-$gDisplayVendorID_RAW"
+        gDstPath="/System/Library/Displays/Contents/Resources/Overrides"
       else
-        gDespath="/System/Library/Displays/Overrides/DisplayVendorID-$gDisplayVendorID_RAW"
+        gDstPath="/System/Library/Displays/Overrides"
     fi
 }
 
@@ -386,7 +386,7 @@ function _patch()
     #
     if [ $i != 0 ];
       then
-        _tidy_exec "cp -R "$gDespath" ${gBak_Dir}" "Backup $gDespath"
+        _tidy_exec "cp -R "$gDstPath" ${gBak_Dir}" "Backup $gDstPath"
         sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool YES
 
         if [ -f "/Library/Preferences/com.apple.windowserver" ];
@@ -394,7 +394,7 @@ function _patch()
             sudo defaults delete /Library/Preferences/com.apple.windowserver DisplayResolutionDisabled 2>&1 >/dev/null
         fi
 
-        sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDespath"
+        sudo cp -R "${REPO}/DisplayVendorID-$gDisplayVendorID_RAW" "$gDstPath"
         _PRINT_MSG "OK: Done. Reboot then use Retina Display Menu (RDM) to select the HiDPI resolution just injected!"
       else
         _PRINT_MSG "NOTE: All system files remain unchanged."
