@@ -343,8 +343,8 @@ function _calcsRes()
           #
           # Encode Resolution Values(Hex) into base64
           #
-          gRes_ENCODE=$(echo $gRes_VAL | xxd -r -p | base64)
-          gRes_HiDPI_ENCODE=$(echo $gRes_HiDPI_VAL | xxd -r -p | base64)
+          gRes_ENCODE=$(printf $gRes_VAL | xxd -r -p | base64)
+          gRes_HiDPI_ENCODE=$(printf $gRes_HiDPI_VAL | xxd -r -p | base64)
 
           #
           # Inject HiDPI values.
