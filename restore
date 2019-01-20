@@ -4,8 +4,7 @@
 # restore under single mode
 # Execute script location
 REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-# BackupRoot="${REPO}/Display-Backups"
-BackupRoot="${REPO}"
+BackupRoot="${REPO}/Display-Backups"
 if [ ! -d ${BackupRoot} ]; then
     # no backup found
     echo "${BackupRoot} does not exist, abort."
