@@ -1,0 +1,86 @@
+#!/bin/sh
+
+# 2019-present (c) syscl
+# restore under single mode
+# Execute script location
+REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+# BackupRoot="${REPO}/Display-Backups"
+BackupRoot="${REPO}"
+if [ ! -d ${BackupRoot} ]; then
+    # no backup found
+    echo "${BackupRoot} does not exist, abort."
+    exit -1
+fi
+ListOfBackup=($(ls ${BackupRoot} |sort -r))
+if [[ ${#ListOfBackup[@]} == 0 ]]; then
+    # no backup found
+    echo "No backups found in ${BackupRoot}, abort."
+    exit -2
+fi
+
+#
+#--------------------------------------------------------------------------------
+#
+
+function toLowerCase()
+{
+    echo "`echo $1 | tr '[:upper:]' '[:lower:]'`"
+}
+
+#
+#--------------------------------------------------------------------------------
+#
+
+if [[ "${#ListOfBackup[@]}" -ge 2 ]]; then
+    echo '------------------------------------'
+    echo '     Display Overrides Backups      '
+    echo '------------------------------------'
+    index=0
+    for dbak in "${ListOfBackup[@]}"
+    do
+        let index++
+        printf "[%d] ${dbak}\n" $index
+    done
+    echo '------------------------------------'
+    # Let user make a selection.
+    printf 'Choose the backup to restore (type in e to exit)'
+    if [[ "${#ListOfBackup[@]}" == 2 ]]; then
+        printf "[Exit/1/2]"
+    else
+        printf "[Exit/1-${index}]"
+    fi
+    read -p ": " selection
+
+    case "$(toLowerCase $selection)" in
+        e|exit       ) echo "Abort."
+                       exit -0
+                       ;;
+
+        [[:digit:]]* ) # Lower selection (arrays start at zero).
+                       let selection-=1
+                       backup="${BackupRoot}/${ListOfBackup[$selection]}"
+                       ;;
+
+        *            ) if [[ "${#ListOfBackup[@]}" == 2  ]]; then
+                        echo 'Invalid menu action, enter 1 or 2'
+                       else
+                        echo "Invalid menu action, enter valid number among 1, ..., ${index}"
+                      fi
+                      ;;
+    esac
+else
+    backup="${BackupRoot}/${ListOfBackup}"
+fi
+
+# check the system release
+sys_minor=$(uname -r |cut -f 1 -d ".")
+let sys_minor-=4
+if [[ $sys_minor -ge 11 ]]; then
+    target="/System/Library/Displays/Contents/Resources/Overrides"
+else 
+    target="/System/Library/Displays/Overrides"
+# restore back the backup
+cp -R "${backup}" "${target}"
+
+echo "Restore completed."
+exit 0

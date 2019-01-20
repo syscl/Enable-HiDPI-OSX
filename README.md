@@ -12,12 +12,17 @@ Download the latest enable-HiDPI.sh by entering the following command in a termi
 ``` sh
 curl -o ~/enable-HiDPI.sh https://raw.githubusercontent.com/syscl/Enable-HiDPI-OSX/master/enable-HiDPI.sh
 ```
+Download the latest restore program just in case the ```enable-HiDPI``` stall the system
+```sh
+curl -o ~/restore https://raw.githubusercontent.com/syscl/Enable-HiDPI-OSX/master/restore
+```
 
 
-This will download enable-HiDPI.sh to your home directory (~) and the next step is to change the permissions of the file (add +x) so that it can be run.
+This will download enable-HiDPI.sh and restore.sh to your home directory (~) and the next step is to change the permissions of the file (add +x) so that it can be run.
  
 ``` sh
 chmod +x ~/enable-HiDPI.sh
+chmod +x ~/restore
 ```
 
 
@@ -29,8 +34,29 @@ Run the script in a terminal window by:
 
 Once you finish injecting the HiDPI values, reboot your OS X and use Retina Display Menu  (RDM) to choose the resolution you want.
 
+How to restore?
+----------------
+Go to ```single``` mode in macOS, enter the following
+```sh
+/sbin/fsck -fy /
+/sbin/mount -uw /
+```
+This will make your root filesystem avaiable to read and write, we then go to the home directory of your unix user name, suppose my user name is ```syscl```, then I should type in 
+```sh
+cd /User/syscl
+./restore
+```
+Choose the restore point you want it to restore, then type in reboot to restore back to original 
+```sh
+reboot
+```
+
 Change Log
 ----------------
+2019-01-19
+
+- Implemented restore script in case incorrect settings stall the system
+
 2018-03-18
 
 - Fixed the issue #16 and issue #32 by removing the redundant prefix

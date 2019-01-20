@@ -63,7 +63,8 @@ gWide_HiDPI_VAL=""
 gRes_HiDPI_VAL=""
 gRes_HiDPI_ENCODE=""
 gDstPath=""
-gBak_Time=$(date +%Y-%m-%d-h%H_%M_%S)
+# gBak_Time=$(date +%Y-%m-%d-h%H_%M_%S)
+gBak_Time=$(date +%Y-%m-%d@%H_%M_%S)
 gBak_Dir="${REPO}/Display-Backups/${gBak_Time}"
 
 #
