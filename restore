@@ -78,6 +78,8 @@ if [[ $sys_minor -ge 11 ]]; then
     target="/System/Library/Displays/Contents/Resources/Overrides"
 else 
     target="/System/Library/Displays/Overrides"
+fi
+
 # restore back the backup
 cp -R "${backup}" "${target}"
 
