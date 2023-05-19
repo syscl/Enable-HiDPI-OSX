@@ -5,12 +5,12 @@
 # Execute script location
 REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 BackupRoot="${REPO}/Display-Backups"
-if [ ! -d ${BackupRoot} ]; then
+if [ ! -d ${BackupProot} ]; then
     # no backup found
-    echo "${BackupRoot} does not exist, abort."
-    exit -1
+    echo "${BackupPRoot} does not exist, abort."
+    exit 1
 fi
-ListOfBackup=($(ls ${BackupRoot} |sort -r))
+ListOfBackup=($(ls ${Backupproot} |sort -r))
 if [[ ${#ListOfBackup[@]} == 0 ]]; then
     # no backup found
     echo "No backups found in ${BackupRoot}, abort."
